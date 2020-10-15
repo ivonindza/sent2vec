@@ -61,10 +61,14 @@ class FastText {
     void saveModel(int32_t);
     void saveDict();
 
-    void loadModel(const std::string&, const bool inference_mode = false, const bool shared_mem_enabled = true,
-                   const int timeout_sec = -1);
+    void loadModel(const std::string&,
+                   const bool inference_mode = false,
+                   const bool shared_mem_enabled = true,
+                   const int timeout_sec = -1,
+                   const bool mmaped_io = false);
     void loadModel(std::istream&, bool load_output_matrix = true);
     void loadModelWithSharedMemory(std::istream&, const std::string&, const int);
+    void loadModelWithMmapedIO(std::istream&, const std::string&);
     void loadDict(const std::string&);
     void loadDict(std::istream&);
     void printInfo(real, real);

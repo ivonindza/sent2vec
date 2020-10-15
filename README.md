@@ -68,6 +68,15 @@ The model is loaded into a shared memory segment named after the model name. The
 model.release_shared_mem('model.bin')
 ```
 
+#### Memory-mapped IO
+
+To use memory-mapped IO with the model's input matrix:
+```python
+model.load_model('model.bin', mmaped_io=True)
+```
+
+The benefit of this access mode is smaller memory usage (because the large input matrix is not loaded into the memory), and the drawback is the speed (because now it is read from disk).
+
 ### Using the Command-line Interface
 
 Given a pre-trained model `model.bin` (download links see below), here is how to generate the sentence features for an input text. To generate the features, use the `print-sentence-vectors` command and the input text file needs to be provided as one sentence per line:

@@ -8,6 +8,8 @@
  */
 
 #include "fasttext.h"
+#include "real.h"
+#include "mmap_matrix.h"
 #include "shmem_matrix.h"
 
 #include <math.h>
@@ -203,7 +205,8 @@ void FastText::saveModel(int32_t checkpoint) {
 void FastText::loadModel(const std::string& filename,
                          const bool inference_mode /* = false */,
                          const bool shared_mem_enabled /* = true */,
-                         const int timeout_sec /* = -1 */) {
+                         const int timeout_sec /* = -1 */,
+                         const bool mmaped_io /* = false */) {
   std::ifstream ifs(filename, std::ifstream::binary);
   if (!ifs.is_open()) {
     std::cerr << "Model file cannot be opened for loading!" << std::endl;
@@ -219,6 +222,8 @@ void FastText::loadModel(const std::string& filename,
     } else {
       loadModel(ifs, false);
     }
+  } else if (mmaped_io) {
+    loadModelWithMmapedIO(ifs, filename);
   } else {
     loadModel(ifs, true);
   }
@@ -293,6 +298,39 @@ void FastText::loadModelWithSharedMemory(std::istream& in,
   in.read((char*) &quant_, sizeof(bool));
 
   input_ = ShmemMatrix::load(in, shmem_name, timeout_sec);
+
+  in.read((char*) &args_->qout, sizeof(bool));
+
+  output_ = std::make_shared<Matrix>();
+  in.read((char*) &(output_->m_), sizeof(int64_t));
+  in.read((char*) &(output_->n_), sizeof(int64_t));
+
+  model_ = std::make_shared<Model>(input_, output_, args_, 0);
+
+  if (args_->model == model_name::sup) {
+    model_->setTargetCounts(dict_->getCounts(entry_type::label));
+  } else {
+    model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
+}
+
+void FastText::loadModelWithMmapedIO(std::istream& in, const std::string& filename) {
+  args_ = std::make_shared<Args>();
+  args_->load(in);
+
+  dict_ = std::make_shared<Dictionary>(args_);
+  dict_->load(in);
+
+  in.read((char*) &quant_, sizeof(bool));
+
+  int64_t m, n;
+  in.read((char*) &m, sizeof(int64_t));
+  in.read((char*) &n, sizeof(int64_t));
+
+  size_t offset = in.tellg();
+  input_ = std::make_shared<MmapMatrix>(filename.c_str(), m, n, offset);
+
+  in.seekg(m * n * sizeof(real), in.cur);
 
   in.read((char*) &args_->qout, sizeof(bool));
 

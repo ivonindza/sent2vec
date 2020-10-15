@@ -20,7 +20,7 @@ cdef extern from "fasttext.h" namespace "fasttext":
 
     cdef cppclass FastText:
         FastText() except +
-        void loadModel(const string&, bool, bool, int)
+        void loadModel(const string&, bool, bool, int, bool)
         void textVector(string, vector[float]&)
         void textVectors(vector[string]&, int, vector[float])#&)
         int getDimension()
@@ -86,13 +86,14 @@ cdef class Sent2vecModel:
     def get_emb_size(self):
         return self._thisptr.getDimension()
 
-    def load_model(self, model_path, inference_mode=False, timeout_sec=-1):
+    def load_model(self, model_path, inference_mode=False, timeout_sec=-1, mmaped_io=False):
         cdef string cmodel_path = model_path.encode('utf-8', 'ignore');
         cdef bool cinference_mode = inference_mode
         # Check if system has shared memory enabled. As of now, only Linux seems to have it.
         cdef bool cshared_memory_enabled = sys.platform.startswith('linux')
         cdef int ctimeout_sec = timeout_sec
-        self._thisptr.loadModel(cmodel_path, cinference_mode, cshared_memory_enabled, ctimeout_sec)
+        cdef bool cmmaped_io = mmaped_io
+        self._thisptr.loadModel(cmodel_path, cinference_mode, cshared_memory_enabled, ctimeout_sec, cmmaped_io)
 
     def embed_sentences(self, sentences, num_threads=1):
         if num_threads <= 0:

@@ -9,7 +9,7 @@
 
 CXX = c++
 CXXFLAGS = -pthread -std=c++0x
-OBJS = args.o dictionary.o productquantizer.o matrix.o shmem_matrix.o qmatrix.o vector.o model.o utils.o fasttext.o
+OBJS = args.o dictionary.o productquantizer.o matrix.o mmap_matrix.o shmem_matrix.o qmatrix.o vector.o model.o utils.o fasttext.o
 INCLUDES = -I.
 ifneq ($(shell uname),Darwin)
 	LINK_RT := -lrt
@@ -32,6 +32,9 @@ productquantizer.o: src/productquantizer.cc src/productquantizer.h src/utils.h
 
 matrix.o: src/matrix.cc src/matrix.h src/utils.h
 	$(CXX) $(CXXFLAGS) -c src/matrix.cc
+
+mmap_matrix.o: src/mmap_matrix.cc src/mmap_matrix.h
+	$(CXX) $(CXXFLAGS) -c src/mmap_matrix.cc
 
 shmem_matrix.o: src/shmem_matrix.cc src/shmem_matrix.h
 	$(CXX) $(CXXFLAGS) -c src/shmem_matrix.cc
