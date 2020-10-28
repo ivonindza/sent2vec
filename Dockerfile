@@ -15,3 +15,6 @@ RUN pip3 install -r requirements.txt
 
 RUN pip3 install .
 RUN make
+
+COPY test-s2v.py /usr/sbin/test-s2v
+RUN chmod +x /usr/sbin/test-s2v
